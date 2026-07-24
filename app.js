@@ -1,6 +1,5 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
-const pinWrap = document.querySelector('.pin-wrap');
 const voice = document.querySelector('.voice');
 
 const idleFrame = 'images/1.png';
@@ -177,16 +176,6 @@ async function play() {
   prepareAudioAnalysis();
   isFinishing = false;
   document.body.classList.add('has-played');
-
-  const dodge = Math.random() < 0.5 ? -22 : 22;
-  pinWrap.animate(
-    [
-      { transform: 'translateX(0)' },
-      { transform: `translateX(${dodge}px) rotate(${dodge < 0 ? -1 : 1}deg)` },
-      { transform: 'translateX(0)' }
-    ],
-    { duration: 360, easing: 'cubic-bezier(.22, 1, .36, 1)' }
-  );
 
   try {
     if (playCount === 0) {
