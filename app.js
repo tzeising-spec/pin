@@ -1,6 +1,7 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
 const angryBird = document.querySelector('.angry-bird');
+const voice = document.querySelector('.voice');
 
 const idleFrame = 'images/1.png';
 const talkingFrames = ['images/1.png', 'images/5.png'];
@@ -22,9 +23,7 @@ let talkingDelay = null;
 let audioContext = null;
 let analyser = null;
 let waveform = null;
-let currentSource = null;
-let currentBuffer = null;
-let sourceStartedAt = 0;
+let audioElementSource = null;
 let isRoutineActive = false;
 let mouthOpen = false;
 let lastMouthChange = 0;
@@ -32,17 +31,8 @@ let mouthOpenedAt = 0;
 let isFinishing = false;
 let playCount = 0;
 let currentSound = soundFiles[0];
-const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-const decoderContext = OfflineContext ? new OfflineContext(1, 1, 44100) : null;
-const audioFilePromises = new Map(
-  soundFiles.map((src) => [src, fetch(src).then((response) => {
-    if (!response.ok) throw new Error(`Could not load ${src}`);
-    return response.arrayBuffer();
-  })])
-);
-const decodedSounds = new Map();
 
-function prepareAudioAnalysis(shouldUnlock = true) {
+function prepareAudioAnalysis() {
   if (!window.AudioContext && !window.webkitAudioContext) return;
 
   if (!audioContext) {
@@ -52,45 +42,12 @@ function prepareAudioAnalysis(shouldUnlock = true) {
     analyser.fftSize = 512;
     analyser.smoothingTimeConstant = 0.55;
     waveform = new Uint8Array(analyser.fftSize);
+    audioElementSource = audioContext.createMediaElementSource(voice);
+    audioElementSource.connect(analyser);
     analyser.connect(audioContext.destination);
   }
 
-  if (shouldUnlock) {
-    if (audioContext.state === 'suspended') audioContext.resume();
-
-    // iOS requires audio to be unlocked directly inside the completed touch.
-    const unlockSource = audioContext.createBufferSource();
-    unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
-    unlockSource.connect(audioContext.destination);
-    unlockSource.start(0);
-  }
-}
-
-async function loadSound(src) {
-  if (decodedSounds.has(src)) return decodedSounds.get(src);
-  const encoded = await audioFilePromises.get(src);
-  const decodingContext = decoderContext || audioContext;
-  if (!decodingContext) throw new Error('Audio decoding is unavailable');
-  const buffer = await decodingContext.decodeAudioData(encoded.slice(0));
-  decodedSounds.set(src, buffer);
-  return buffer;
-}
-
-function getPlaybackTime() {
-  return audioContext ? Math.max(0, audioContext.currentTime - sourceStartedAt) : 0;
-}
-
-function beginPlayback(buffer) {
-  currentBuffer = buffer;
-  currentSource = audioContext.createBufferSource();
-  currentSource.buffer = currentBuffer;
-  currentSource.connect(analyser);
-  currentSource.onended = finishTalking;
-  sourceStartedAt = audioContext.currentTime;
-  currentSource.start(0);
-  playCount += 1;
-  showFrame(idleFrame);
-  talkingDelay = window.setTimeout(startTalking, 160);
+  if (audioContext.state === 'suspended') audioContext.resume();
 }
 
 function clearAnimation() {
@@ -165,8 +122,8 @@ function startTalking() {
 
   const animateMouth = (now) => {
     const endingLead = currentSound.endsWith('sound3.mp3') ? 0.38 : 0.22;
-    const playbackTime = getPlaybackTime();
-    if (currentBuffer && playbackTime >= currentBuffer.duration - endingLead) {
+    const playbackTime = voice.currentTime;
+    if (voice.duration && playbackTime >= voice.duration - endingLead) {
       finishTalking();
       return;
     }
@@ -281,14 +238,11 @@ async function play() {
       const choices = soundFiles.filter((src) => src !== currentSound);
       currentSound = choices[Math.floor(Math.random() * choices.length)];
     }
-    const readyBuffer = decodedSounds.get(currentSound);
-    if (readyBuffer) {
-      beginPlayback(readyBuffer);
-    } else {
-      const loadedBuffer = await loadSound(currentSound);
-      await audioContext.resume();
-      beginPlayback(loadedBuffer);
-    }
+    voice.src = currentSound;
+    voice.load();
+    voice.currentTime = 0;
+    await voice.play();
+    playCount += 1;
   } catch {
     resetToIdle();
   }
@@ -310,9 +264,19 @@ button.addEventListener('click', () => {
 });
 angryBird.addEventListener('pointerdown', explodeAngryBird);
 
-// Decode with an offline context before the first touch. The live playback
-// context must be created inside the touch event or iOS can keep it muted.
-soundFiles.forEach((src) => loadSound(src).catch(() => {}));
+voice.disableRemotePlayback = true;
+voice.setAttribute('x-webkit-airplay', 'deny');
+voice.addEventListener('playing', () => {
+  clearAnimation();
+  showFrame(idleFrame);
+  talkingDelay = window.setTimeout(startTalking, 160);
+});
+voice.addEventListener('ended', finishTalking);
+
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.metadata = null;
+  try { navigator.mediaSession.playbackState = 'none'; } catch {}
+}
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
