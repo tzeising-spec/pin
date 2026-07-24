@@ -1,0 +1,37 @@
+const CACHE = 'pin-v30';
+const FILES = [
+  './',
+  'index.html',
+  'styles.css',
+  'app.js',
+  'manifest.webmanifest',
+  'images/pinbackground.png',
+  'images/1.png',
+  'images/2.png',
+  'images/3.png',
+  'images/4.png',
+  'images/5.png',
+  'images/6.png',
+  'images/7.png',
+  'images/8.png',
+  'sounds/cantgetme.mp3',
+  'sounds/sound2.mp3',
+  'sounds/sound3.mp3'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+});

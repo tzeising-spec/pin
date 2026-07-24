@@ -1,0 +1,17 @@
+{
+  "name": "Pin",
+  "short_name": "Pin",
+  "description": "Tap Pin and hear him talk.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f5f2",
+  "theme_color": "#f7f5f2",
+  "icons": [
+    {
+      "src": "images/1.png",
+      "sizes": "722x2007",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

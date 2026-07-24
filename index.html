@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#f7f5f2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pin" />
+    <title>Pin</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="images/1.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <button class="pin-button" type="button" aria-label="Tap Pin to make him talk">
+        <span class="pin-wrap">
+          <span class="taunt-lines" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+          <img class="pin" src="images/1.png" alt="A friendly talking bowling pin" draggable="false" />
+          <span class="tap-hint" aria-hidden="true">tap me!</span>
+        </span>
+      </button>
+    </main>
+
+    <audio class="voice" src="sounds/cantgetme.mp3" preload="auto"></audio>
+    <script src="app.js"></script>
+  </body>
+</html>
