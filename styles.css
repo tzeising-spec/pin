@@ -59,6 +59,21 @@ body {
   -webkit-user-drag: none;
 }
 
+.slingshot {
+  position: fixed;
+  z-index: 3;
+  top: 25%;
+  left: 0;
+  display: none;
+  width: min(44vw, 185px);
+  height: auto;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 10px 8px rgb(75 20 15 / 20%));
+  will-change: transform;
+  -webkit-user-drag: none;
+}
+
 .bird-explosion {
   position: fixed;
   z-index: 5;
@@ -69,13 +84,25 @@ body {
 
 .bird-explosion i {
   position: absolute;
-  width: 18px;
-  height: 18px;
-  margin: -9px;
+  width: 23px;
+  height: 23px;
+  margin: -11.5px;
   border-radius: 45% 55% 50% 50%;
   background: var(--color);
   box-shadow: 0 0 0 3px rgb(255 255 255 / 65%);
-  animation: bird-pop 620ms cubic-bezier(.15, .7, .25, 1) forwards;
+  animation: bird-pop 950ms cubic-bezier(.15, .7, .25, 1) forwards;
+}
+
+.bird-explosion::before {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px;
+  border-radius: 50%;
+  background: #ffbd25;
+  box-shadow: 0 0 0 12px #e80035, 0 0 0 24px rgb(255 189 37 / 55%);
+  animation: bird-flash 700ms ease-out forwards;
 }
 
 .stage::before {
@@ -201,6 +228,11 @@ body {
   to { opacity: 0; transform: rotate(var(--angle)) translateX(var(--distance)) scale(.25); }
 }
 
+@keyframes bird-flash {
+  from { opacity: 1; transform: scale(.35); }
+  to { opacity: 0; transform: scale(3.2); }
+}
+
 @keyframes pin-rock {
   0%, 100% { transform: translateY(0) rotate(-1.2deg); }
   25% { transform: translateY(-8px) rotate(.5deg); }
@@ -216,6 +248,7 @@ body {
   .tap-hint { animation: none; }
   .stage::before, .stage::after, .taunt-lines { animation: none; }
   .bird-explosion i { animation-duration: 180ms; }
+  .bird-explosion::before { animation-duration: 180ms; }
   .pin { transition: none; }
   .is-talking .pin { animation: none; }
 }

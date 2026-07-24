@@ -1,4 +1,4 @@
-const CACHE = 'pin-v38';
+const CACHE = 'pin-v39';
 const FILES = [
   './',
   'index.html',
@@ -15,9 +15,11 @@ const FILES = [
   'images/7.png',
   'images/8.png',
   'images/angrybird.png',
+  'images/slingshot.jpg',
   'sounds/cantgetme.mp3',
   'sounds/sound2.mp3',
-  'sounds/sound3.mp3'
+  'sounds/sound3.mp3',
+  'sounds/slingshot.mp3'
 ];
 
 self.addEventListener('install', (event) => {
