@@ -44,6 +44,20 @@ body {
   pointer-events: none;
 }
 
+.angry-bird {
+  position: fixed;
+  z-index: 3;
+  top: 27%;
+  left: 0;
+  display: none;
+  width: min(34vw, 145px);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 8px rgb(75 20 15 / 22%));
+  will-change: transform;
+  -webkit-user-drag: none;
+}
+
 .stage::before {
   top: 12%;
   left: -55px;

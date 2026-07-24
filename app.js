@@ -1,6 +1,7 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
 const voice = document.querySelector('.voice');
+const angryBird = document.querySelector('.angry-bird');
 
 const idleFrame = 'images/1.png';
 const talkingFrames = ['images/1.png', 'images/5.png'];
@@ -61,11 +62,31 @@ function clearAnimation() {
   talkingDelay = null;
   finishTimers.forEach(window.clearTimeout);
   finishTimers = [];
+  angryBird.getAnimations().forEach((animation) => animation.cancel());
+  angryBird.style.display = 'none';
 }
 
 function showFrame(src, flipped = false) {
   pin.src = src;
   pin.classList.toggle('is-flipped', flipped);
+}
+
+function flyAngryBird() {
+  angryBird.style.display = 'block';
+  const flight = angryBird.animate(
+    [
+      { transform: 'translate3d(-170px, 12px, 0) rotate(-7deg)', offset: 0 },
+      { transform: 'translate3d(calc(50vw - 50%), -12px, 0) rotate(2deg)', offset: .52 },
+      { transform: 'translate3d(calc(100vw + 170px), 6px, 0) rotate(7deg)', offset: 1 }
+    ],
+    {
+      duration: 1000,
+      easing: 'linear'
+    }
+  );
+  flight.onfinish = () => {
+    angryBird.style.display = 'none';
+  };
 }
 
 function startTalking() {
@@ -156,7 +177,12 @@ function finishTalking() {
     }
   );
 
-  finishTimers.push(window.setTimeout(resetToIdle, 320));
+  if (currentSound.endsWith('sound3.mp3')) {
+    flyAngryBird();
+    finishTimers.push(window.setTimeout(resetToIdle, 1000));
+  } else {
+    finishTimers.push(window.setTimeout(resetToIdle, 320));
+  }
 }
 
 function resetToIdle() {
