@@ -1,6 +1,5 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
-const voice = document.querySelector('.voice');
 const angryBird = document.querySelector('.angry-bird');
 
 const idleFrame = 'images/1.png';
@@ -23,18 +22,23 @@ let talkingDelay = null;
 let audioContext = null;
 let analyser = null;
 let waveform = null;
+let currentSource = null;
+let currentBuffer = null;
+let sourceStartedAt = 0;
+let isRoutineActive = false;
 let mouthOpen = false;
 let lastMouthChange = 0;
 let mouthOpenedAt = 0;
 let isFinishing = false;
 let playCount = 0;
 let currentSound = soundFiles[0];
-
-soundFiles.slice(1).forEach((src) => {
-  const audio = new Audio();
-  audio.preload = 'auto';
-  audio.src = src;
-});
+const audioFilePromises = new Map(
+  soundFiles.map((src) => [src, fetch(src).then((response) => {
+    if (!response.ok) throw new Error(`Could not load ${src}`);
+    return response.arrayBuffer();
+  })])
+);
+const decodedSounds = new Map();
 
 function prepareAudioAnalysis() {
   if (!window.AudioContext && !window.webkitAudioContext) return;
@@ -46,13 +50,22 @@ function prepareAudioAnalysis() {
     analyser.fftSize = 512;
     analyser.smoothingTimeConstant = 0.55;
     waveform = new Uint8Array(analyser.fftSize);
-
-    const source = audioContext.createMediaElementSource(voice);
-    source.connect(analyser);
     analyser.connect(audioContext.destination);
   }
 
   if (audioContext.state === 'suspended') audioContext.resume();
+}
+
+async function loadSound(src) {
+  if (decodedSounds.has(src)) return decodedSounds.get(src);
+  const encoded = await audioFilePromises.get(src);
+  const buffer = await audioContext.decodeAudioData(encoded.slice(0));
+  decodedSounds.set(src, buffer);
+  return buffer;
+}
+
+function getPlaybackTime() {
+  return audioContext ? Math.max(0, audioContext.currentTime - sourceStartedAt) : 0;
 }
 
 function clearAnimation() {
@@ -89,6 +102,33 @@ function flyAngryBird() {
   };
 }
 
+function explodeAngryBird(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (angryBird.style.display !== 'block') return;
+
+  const rect = angryBird.getBoundingClientRect();
+  angryBird.getAnimations().forEach((animation) => animation.cancel());
+  angryBird.style.display = 'none';
+
+  const burst = document.createElement('span');
+  burst.className = 'bird-explosion';
+  burst.style.left = `${rect.left + rect.width / 2}px`;
+  burst.style.top = `${rect.top + rect.height / 2}px`;
+  const colors = ['#e80035', '#ffbd25', '#171717', '#f6e4ce'];
+
+  for (let index = 0; index < 14; index += 1) {
+    const particle = document.createElement('i');
+    particle.style.setProperty('--angle', `${index * (360 / 14)}deg`);
+    particle.style.setProperty('--distance', `${65 + Math.random() * 65}px`);
+    particle.style.setProperty('--color', colors[index % colors.length]);
+    burst.appendChild(particle);
+  }
+
+  document.body.appendChild(burst);
+  window.setTimeout(() => burst.remove(), 700);
+}
+
 function startTalking() {
   clearAnimation();
   document.body.classList.add('is-playing');
@@ -100,7 +140,8 @@ function startTalking() {
 
   const animateMouth = (now) => {
     const endingLead = currentSound.endsWith('sound3.mp3') ? 0.38 : 0.22;
-    if (voice.duration && voice.currentTime >= voice.duration - endingLead) {
+    const playbackTime = getPlaybackTime();
+    if (currentBuffer && playbackTime >= currentBuffer.duration - endingLead) {
       finishTalking();
       return;
     }
@@ -121,7 +162,7 @@ function startTalking() {
       // Add brief closures so the mouth still articulates individual sounds.
       if (mouthOpen && now - mouthOpenedAt > 175) shouldOpen = false;
     } else {
-      shouldOpen = Math.floor(voice.currentTime / 0.14) % 2 === 1;
+      shouldOpen = Math.floor(playbackTime / 0.14) % 2 === 1;
     }
 
     if (shouldOpen !== mouthOpen && now - lastMouthChange > 85) {
@@ -197,13 +238,12 @@ function resetToIdle() {
   showFrame(idleFrame);
   document.body.classList.remove('is-playing');
   document.body.classList.remove('is-talking');
+  isRoutineActive = false;
 }
 
 async function play() {
-  if (isFinishing) {
-    resetToIdle();
-    pin.getAnimations().forEach((animation) => animation.cancel());
-  }
+  if (isRoutineActive) return;
+  isRoutineActive = true;
 
   prepareAudioAnalysis();
   isFinishing = false;
@@ -216,26 +256,33 @@ async function play() {
       const choices = soundFiles.filter((src) => src !== currentSound);
       currentSound = choices[Math.floor(Math.random() * choices.length)];
     }
-    voice.src = currentSound;
-    voice.load();
-    voice.currentTime = 0;
-    await voice.play();
+    currentBuffer = await loadSound(currentSound);
+    await audioContext.resume();
+    currentSource = audioContext.createBufferSource();
+    currentSource.buffer = currentBuffer;
+    currentSource.connect(analyser);
+    currentSource.onended = finishTalking;
+    sourceStartedAt = audioContext.currentTime;
+    currentSource.start();
     playCount += 1;
+    showFrame(idleFrame);
+    talkingDelay = window.setTimeout(startTalking, 160);
   } catch {
     resetToIdle();
   }
 }
 
-button.addEventListener('click', play);
-voice.addEventListener('playing', () => {
-  clearAnimation();
-  showFrame(idleFrame);
-  talkingDelay = window.setTimeout(startTalking, 160);
+let lastPointerPress = 0;
+button.addEventListener('pointerdown', (event) => {
+  if (!event.isPrimary) return;
+  event.preventDefault();
+  lastPointerPress = performance.now();
+  play();
 });
-voice.addEventListener('ended', finishTalking);
-voice.addEventListener('pause', () => {
-  if (voice.currentTime < voice.duration) resetToIdle();
+button.addEventListener('click', () => {
+  if (performance.now() - lastPointerPress > 500) play();
 });
+angryBird.addEventListener('pointerdown', explodeAngryBird);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
