@@ -103,6 +103,7 @@ body {
   outline: 0;
   background: transparent;
   cursor: pointer;
+  touch-action: none;
 }
 
 .pin-wrap {

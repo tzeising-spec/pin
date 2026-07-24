@@ -54,6 +54,12 @@ function prepareAudioAnalysis() {
   }
 
   if (audioContext.state === 'suspended') audioContext.resume();
+
+  // iOS requires audio to be unlocked directly inside the completed touch.
+  const unlockSource = audioContext.createBufferSource();
+  unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
+  unlockSource.connect(audioContext.destination);
+  unlockSource.start(0);
 }
 
 async function loadSound(src) {
@@ -272,15 +278,19 @@ async function play() {
   }
 }
 
-let lastPointerPress = 0;
-button.addEventListener('pointerdown', (event) => {
-  if (!event.isPrimary) return;
+let lastTouchPress = 0;
+button.addEventListener('touchend', (event) => {
   event.preventDefault();
-  lastPointerPress = performance.now();
+  lastTouchPress = performance.now();
+  play();
+}, { passive: false });
+button.addEventListener('pointerup', (event) => {
+  if (!event.isPrimary || event.pointerType === 'touch') return;
+  event.preventDefault();
   play();
 });
 button.addEventListener('click', () => {
-  if (performance.now() - lastPointerPress > 500) play();
+  if (performance.now() - lastTouchPress > 500) play();
 });
 angryBird.addEventListener('pointerdown', explodeAngryBird);
 
