@@ -32,6 +32,8 @@ let mouthOpenedAt = 0;
 let isFinishing = false;
 let playCount = 0;
 let currentSound = soundFiles[0];
+const OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+const decoderContext = OfflineContext ? new OfflineContext(1, 1, 44100) : null;
 const audioFilePromises = new Map(
   soundFiles.map((src) => [src, fetch(src).then((response) => {
     if (!response.ok) throw new Error(`Could not load ${src}`);
@@ -67,7 +69,9 @@ function prepareAudioAnalysis(shouldUnlock = true) {
 async function loadSound(src) {
   if (decodedSounds.has(src)) return decodedSounds.get(src);
   const encoded = await audioFilePromises.get(src);
-  const buffer = await audioContext.decodeAudioData(encoded.slice(0));
+  const decodingContext = decoderContext || audioContext;
+  if (!decodingContext) throw new Error('Audio decoding is unavailable');
+  const buffer = await decodingContext.decodeAudioData(encoded.slice(0));
   decodedSounds.set(src, buffer);
   return buffer;
 }
@@ -306,9 +310,8 @@ button.addEventListener('click', () => {
 });
 angryBird.addEventListener('pointerdown', explodeAngryBird);
 
-// Decode the tiny clips before the first touch so iOS can start them
-// synchronously while its user-activation window is still open.
-prepareAudioAnalysis(false);
+// Decode with an offline context before the first touch. The live playback
+// context must be created inside the touch event or iOS can keep it muted.
 soundFiles.forEach((src) => loadSound(src).catch(() => {}));
 
 if ('serviceWorker' in navigator) {
