@@ -99,7 +99,8 @@ function startTalking() {
   showFrame(idleFrame);
 
   const animateMouth = (now) => {
-    if (voice.duration && voice.currentTime >= voice.duration - 0.22) {
+    const endingLead = currentSound.endsWith('sound3.mp3') ? 0.38 : 0.22;
+    if (voice.duration && voice.currentTime >= voice.duration - endingLead) {
       finishTalking();
       return;
     }
@@ -154,7 +155,12 @@ function finishTalking() {
         { transform: 'translateX(-175px) translateY(-4px) rotate(86deg) scale(.72)', offset: .424 },
         { transform: 'translateX(-175px) translateY(0) rotate(90deg) scale(.72)', offset: .504 },
         { transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)', offset: .557 },
-        { transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)', offset: .93 },
+        {
+          transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)',
+          offset: .93,
+          easing: 'cubic-bezier(.4, 0, .8, .7)'
+        },
+        { transform: 'translateY(0) rotate(0deg) scale(1)', offset: .975 },
         { transform: 'translateY(0) rotate(0deg) scale(1)', offset: 1 }
       ],
       {

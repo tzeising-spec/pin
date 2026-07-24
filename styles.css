@@ -50,7 +50,7 @@ body {
   top: 27%;
   left: 0;
   display: none;
-  width: min(34vw, 145px);
+  width: min(48vw, 200px);
   height: auto;
   pointer-events: none;
   filter: drop-shadow(0 10px 8px rgb(75 20 15 / 22%));
