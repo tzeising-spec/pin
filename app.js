@@ -40,7 +40,7 @@ const audioFilePromises = new Map(
 );
 const decodedSounds = new Map();
 
-function prepareAudioAnalysis() {
+function prepareAudioAnalysis(shouldUnlock = true) {
   if (!window.AudioContext && !window.webkitAudioContext) return;
 
   if (!audioContext) {
@@ -53,13 +53,15 @@ function prepareAudioAnalysis() {
     analyser.connect(audioContext.destination);
   }
 
-  if (audioContext.state === 'suspended') audioContext.resume();
+  if (shouldUnlock) {
+    if (audioContext.state === 'suspended') audioContext.resume();
 
-  // iOS requires audio to be unlocked directly inside the completed touch.
-  const unlockSource = audioContext.createBufferSource();
-  unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
-  unlockSource.connect(audioContext.destination);
-  unlockSource.start(0);
+    // iOS requires audio to be unlocked directly inside the completed touch.
+    const unlockSource = audioContext.createBufferSource();
+    unlockSource.buffer = audioContext.createBuffer(1, 1, 22050);
+    unlockSource.connect(audioContext.destination);
+    unlockSource.start(0);
+  }
 }
 
 async function loadSound(src) {
@@ -72,6 +74,19 @@ async function loadSound(src) {
 
 function getPlaybackTime() {
   return audioContext ? Math.max(0, audioContext.currentTime - sourceStartedAt) : 0;
+}
+
+function beginPlayback(buffer) {
+  currentBuffer = buffer;
+  currentSource = audioContext.createBufferSource();
+  currentSource.buffer = currentBuffer;
+  currentSource.connect(analyser);
+  currentSource.onended = finishTalking;
+  sourceStartedAt = audioContext.currentTime;
+  currentSource.start(0);
+  playCount += 1;
+  showFrame(idleFrame);
+  talkingDelay = window.setTimeout(startTalking, 160);
 }
 
 function clearAnimation() {
@@ -262,17 +277,14 @@ async function play() {
       const choices = soundFiles.filter((src) => src !== currentSound);
       currentSound = choices[Math.floor(Math.random() * choices.length)];
     }
-    currentBuffer = await loadSound(currentSound);
-    await audioContext.resume();
-    currentSource = audioContext.createBufferSource();
-    currentSource.buffer = currentBuffer;
-    currentSource.connect(analyser);
-    currentSource.onended = finishTalking;
-    sourceStartedAt = audioContext.currentTime;
-    currentSource.start();
-    playCount += 1;
-    showFrame(idleFrame);
-    talkingDelay = window.setTimeout(startTalking, 160);
+    const readyBuffer = decodedSounds.get(currentSound);
+    if (readyBuffer) {
+      beginPlayback(readyBuffer);
+    } else {
+      const loadedBuffer = await loadSound(currentSound);
+      await audioContext.resume();
+      beginPlayback(loadedBuffer);
+    }
   } catch {
     resetToIdle();
   }
@@ -294,6 +306,13 @@ button.addEventListener('click', () => {
 });
 angryBird.addEventListener('pointerdown', explodeAngryBird);
 
+// Decode the tiny clips before the first touch so iOS can start them
+// synchronously while its user-activation window is still open.
+prepareAudioAnalysis(false);
+soundFiles.forEach((src) => loadSound(src).catch(() => {}));
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').then((registration) => registration.update());
+  });
 }
