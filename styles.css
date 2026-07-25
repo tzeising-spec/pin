@@ -78,6 +78,20 @@ body {
   will-change: transform;
 }
 
+.flying-hamster {
+  position: fixed;
+  z-index: 3;
+  top: 40%;
+  left: 0;
+  display: none;
+  font-size: min(27vw, 115px);
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: none;
+  filter: drop-shadow(0 10px 8px rgb(75 40 20 / 22%));
+  will-change: transform;
+}
+
 .slingshot {
   position: fixed;
   z-index: 3;

@@ -2,6 +2,7 @@ const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
 const angryBirds = document.querySelectorAll('.angry-bird');
 const flyingBanana = document.querySelector('.flying-banana');
+const flyingHamster = document.querySelector('.flying-hamster');
 const slingshot = document.querySelector('.slingshot');
 const voice = document.querySelector('.voice');
 
@@ -13,7 +14,8 @@ const soundFiles = [
   'sounds/sound2.mp3',
   'sounds/sound3.mp3',
   'sounds/slingshot.mp3',
-  'sounds/banana.mp3'
+  'sounds/banana.mp3',
+  'sounds/fluffmuffin.mp3'
 ];
 
 allFrames.forEach((frame) => {
@@ -68,6 +70,8 @@ function clearAnimation() {
   });
   flyingBanana.getAnimations().forEach((animation) => animation.cancel());
   flyingBanana.style.display = 'none';
+  flyingHamster.getAnimations().forEach((animation) => animation.cancel());
+  flyingHamster.style.display = 'none';
   slingshot.getAnimations().forEach((animation) => animation.cancel());
   slingshot.style.display = 'none';
 }
@@ -115,6 +119,25 @@ function flyBanana() {
   );
   bananaFlight.onfinish = () => {
     flyingBanana.style.display = 'none';
+  };
+}
+
+function flyHamster() {
+  flyingHamster.style.display = 'block';
+  const hamsterFlight = flyingHamster.animate(
+    [
+      { transform: 'translate3d(calc(100vw + 130px), 8px, 0) rotate(12deg)', offset: 0 },
+      { transform: 'translate3d(calc(50vw - 50%), -16px, 0) rotate(-8deg)', offset: .52 },
+      { transform: 'translate3d(-130px, 10px, 0) rotate(-25deg)', offset: 1 }
+    ],
+    {
+      duration: 1800,
+      easing: 'linear',
+      fill: 'backwards'
+    }
+  );
+  hamsterFlight.onfinish = () => {
+    flyingHamster.style.display = 'none';
   };
 }
 
@@ -177,7 +200,8 @@ function startTalking() {
   const animateMouth = (now) => {
     const hasFlyby = currentSound.endsWith('sound3.mp3')
       || currentSound.endsWith('slingshot.mp3')
-      || currentSound.endsWith('banana.mp3');
+      || currentSound.endsWith('banana.mp3')
+      || currentSound.endsWith('fluffmuffin.mp3');
     const endingLead = hasFlyby ? 0.38 : 0.22;
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
@@ -272,6 +296,9 @@ function finishTalking() {
   } else if (currentSound.endsWith('banana.mp3')) {
     flyBanana();
     finishTimers.push(window.setTimeout(resetToIdle, 1850));
+  } else if (currentSound.endsWith('fluffmuffin.mp3')) {
+    flyHamster();
+    finishTimers.push(window.setTimeout(resetToIdle, 1850));
   } else {
     finishTimers.push(window.setTimeout(resetToIdle, 320));
   }
@@ -289,7 +316,7 @@ function resetToIdle() {
 async function play() {
   if (performance.now() < ignorePinUntil) return;
   if (isRoutineActive) {
-    const flybys = [...angryBirds, flyingBanana, slingshot];
+    const flybys = [...angryBirds, flyingBanana, flyingHamster, slingshot];
     const animationRunning = [pin, ...flybys].some((element) =>
       element.getAnimations().some((animation) => animation.playState === 'running')
     );
@@ -331,6 +358,7 @@ button.addEventListener('click', () => {
 });
 angryBirds.forEach((angryBird) => angryBird.addEventListener('pointerdown', explodeFlyby));
 flyingBanana.addEventListener('pointerdown', explodeFlyby);
+flyingHamster.addEventListener('pointerdown', explodeFlyby);
 slingshot.addEventListener('pointerdown', explodeFlyby);
 
 voice.disableRemotePlayback = true;
