@@ -67,7 +67,8 @@ body {
   display: none;
   width: min(44vw, 185px);
   height: auto;
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
   mix-blend-mode: multiply;
   filter: drop-shadow(0 10px 8px rgb(75 20 15 / 20%));
   will-change: transform;
