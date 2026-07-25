@@ -32,44 +32,13 @@ allFrames.forEach((frame) => {
 let animationTimer = null;
 let finishTimers = [];
 let talkingDelay = null;
-let audioContext = null;
-let analyser = null;
-let waveform = null;
-let audioElementSource = null;
 let isRoutineActive = false;
 let mouthOpen = false;
 let lastMouthChange = 0;
-let mouthOpenedAt = 0;
 let isFinishing = false;
 let playCount = 0;
 let currentSound = soundFiles[0];
 let ignorePinUntil = 0;
-
-function connectAudioAnalysis() {
-  if (audioElementSource || !audioContext || audioContext.state !== 'running') return;
-  audioElementSource = audioContext.createMediaElementSource(voice);
-  audioElementSource.connect(analyser);
-  analyser.connect(audioContext.destination);
-}
-
-function prepareAudioAnalysis() {
-  if (!window.AudioContext && !window.webkitAudioContext) return;
-
-  if (!audioContext) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioContext = new AudioContext();
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 512;
-    analyser.smoothingTimeConstant = 0.55;
-    waveform = new Uint8Array(analyser.fftSize);
-  }
-
-  if (audioContext.state === 'suspended') {
-    audioContext.resume().then(connectAudioAnalysis).catch(() => {});
-  } else {
-    connectAudioAnalysis();
-  }
-}
 
 function clearAnimation() {
   window.cancelAnimationFrame(animationTimer);
@@ -281,7 +250,6 @@ function startTalking() {
   document.body.classList.add('is-talking');
   mouthOpen = false;
   lastMouthChange = 0;
-  mouthOpenedAt = 0;
   showFrame(idleFrame);
 
   const animateMouth = (now) => {
@@ -299,29 +267,11 @@ function startTalking() {
       return;
     }
 
-    let shouldOpen;
-
-    if (analyser && waveform) {
-      analyser.getByteTimeDomainData(waveform);
-      let energy = 0;
-      for (const sample of waveform) {
-        const centered = (sample - 128) / 128;
-        energy += centered * centered;
-      }
-      const volume = Math.sqrt(energy / waveform.length);
-      shouldOpen = mouthOpen ? volume > 0.035 : volume > 0.058;
-
-      // Loud, compressed speech can stay above the threshold for a whole phrase.
-      // Add brief closures so the mouth still articulates individual sounds.
-      if (mouthOpen && now - mouthOpenedAt > 175) shouldOpen = false;
-    } else {
-      shouldOpen = Math.floor(playbackTime / 0.14) % 2 === 1;
-    }
+    const shouldOpen = Math.floor(playbackTime / 0.14) % 2 === 1;
 
     if (shouldOpen !== mouthOpen && now - lastMouthChange > 85) {
       mouthOpen = shouldOpen;
       lastMouthChange = now;
-      if (mouthOpen) mouthOpenedAt = now;
       showFrame(mouthOpen ? talkingFrames[1] : talkingFrames[0]);
     }
 
@@ -436,7 +386,6 @@ async function play() {
   document.body.classList.add('has-played');
 
   try {
-    prepareAudioAnalysis();
     if (playCount === 0) {
       currentSound = soundFiles[0];
     } else {
@@ -471,8 +420,6 @@ flyingSandwich.addEventListener('pointerdown', explodeFlyby);
 flyingFish.forEach((fish) => fish.addEventListener('pointerdown', explodeFlyby));
 slingshot.addEventListener('pointerdown', explodeFlyby);
 
-voice.disableRemotePlayback = true;
-voice.setAttribute('x-webkit-airplay', 'deny');
 voice.addEventListener('playing', () => {
   clearAnimation();
   showFrame(idleFrame);
@@ -480,10 +427,16 @@ voice.addEventListener('playing', () => {
 });
 voice.addEventListener('ended', finishTalking);
 
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.metadata = null;
-  try { navigator.mediaSession.playbackState = 'none'; } catch {}
+function stopPlayback() {
+  voice.pause();
+  voice.currentTime = 0;
+  resetToIdle();
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopPlayback();
+});
+window.addEventListener('pagehide', stopPlayback);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
