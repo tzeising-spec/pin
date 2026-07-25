@@ -35,6 +35,7 @@ let mouthOpenedAt = 0;
 let isFinishing = false;
 let playCount = 0;
 let currentSound = soundFiles[0];
+let ignorePinUntil = 0;
 
 function prepareAudioAnalysis() {
   if (!window.AudioContext && !window.webkitAudioContext) return;
@@ -140,6 +141,7 @@ function explodeFlyby(event) {
   event.stopPropagation();
   const flyby = event.currentTarget;
   if (flyby.style.display !== 'block') return;
+  ignorePinUntil = performance.now() + 750;
 
   const rect = flyby.getBoundingClientRect();
   flyby.getAnimations().forEach((animation) => animation.cancel());
@@ -235,19 +237,18 @@ function finishTalking() {
         { transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)', offset: .557 },
         {
           transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)',
-          offset: .93,
+          offset: .82,
           easing: 'cubic-bezier(.4, 0, .8, .7)'
         },
-        { transform: 'translateY(0) rotate(0deg) scale(1)', offset: .975 },
         { transform: 'translateY(0) rotate(0deg) scale(1)', offset: 1 }
       ],
       {
-        duration: 4300,
+        duration: 3000,
         easing: 'cubic-bezier(.22, 1, .36, 1)'
       }
     );
     fallRecovery.onfinish = resetToIdle;
-    finishTimers.push(window.setTimeout(resetToIdle, 4700));
+    finishTimers.push(window.setTimeout(resetToIdle, 3400));
     return;
   }
 
@@ -286,6 +287,7 @@ function resetToIdle() {
 }
 
 async function play() {
+  if (performance.now() < ignorePinUntil) return;
   if (isRoutineActive) {
     const flybys = [...angryBirds, flyingBanana, slingshot];
     const animationRunning = [pin, ...flybys].some((element) =>
