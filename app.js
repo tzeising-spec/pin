@@ -1,6 +1,7 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
 const angryBirds = document.querySelectorAll('.angry-bird');
+const flyingBanana = document.querySelector('.flying-banana');
 const slingshot = document.querySelector('.slingshot');
 const voice = document.querySelector('.voice');
 
@@ -63,6 +64,8 @@ function clearAnimation() {
     angryBird.getAnimations().forEach((animation) => animation.cancel());
     angryBird.style.display = 'none';
   });
+  flyingBanana.getAnimations().forEach((animation) => animation.cancel());
+  flyingBanana.style.display = 'none';
   slingshot.getAnimations().forEach((animation) => animation.cancel());
   slingshot.style.display = 'none';
 }
@@ -82,8 +85,8 @@ function flyAngryBirds() {
         { transform: 'translate3d(calc(100vw + 170px), 6px, 0) rotate(7deg)', offset: 1 }
       ],
       {
-        duration: 1500,
-        delay: index * 260,
+        duration: 1800,
+        delay: index * 300,
         easing: 'linear',
         fill: 'backwards'
       }
@@ -92,6 +95,24 @@ function flyAngryBirds() {
       angryBird.style.display = 'none';
     };
   });
+
+  flyingBanana.style.display = 'block';
+  const bananaFlight = flyingBanana.animate(
+    [
+      { transform: 'translate3d(-120px, 10px, 0) rotate(-25deg)', offset: 0 },
+      { transform: 'translate3d(calc(50vw - 50%), -14px, 0) rotate(18deg)', offset: .52 },
+      { transform: 'translate3d(calc(100vw + 120px), 8px, 0) rotate(65deg)', offset: 1 }
+    ],
+    {
+      duration: 1800,
+      delay: 600,
+      easing: 'linear',
+      fill: 'backwards'
+    }
+  );
+  bananaFlight.onfinish = () => {
+    flyingBanana.style.display = 'none';
+  };
 }
 
 function flySlingshot() {
@@ -238,7 +259,7 @@ function finishTalking() {
 
   if (currentSound.endsWith('sound3.mp3')) {
     flyAngryBirds();
-    finishTimers.push(window.setTimeout(resetToIdle, 1800));
+    finishTimers.push(window.setTimeout(resetToIdle, 2450));
   } else if (currentSound.endsWith('slingshot.mp3')) {
     flySlingshot();
     finishTimers.push(window.setTimeout(resetToIdle, 1000));
@@ -257,14 +278,21 @@ function resetToIdle() {
 }
 
 async function play() {
-  if (isRoutineActive) return;
+  if (isRoutineActive) {
+    const flybys = [...angryBirds, flyingBanana, slingshot];
+    const animationRunning = [pin, ...flybys].some((element) =>
+      element.getAnimations().some((animation) => animation.playState === 'running')
+    );
+    if (!voice.paused || animationRunning) return;
+    resetToIdle();
+  }
   isRoutineActive = true;
 
-  prepareAudioAnalysis();
   isFinishing = false;
   document.body.classList.add('has-played');
 
   try {
+    prepareAudioAnalysis();
     if (playCount === 0) {
       currentSound = soundFiles[0];
     } else {
@@ -281,15 +309,18 @@ async function play() {
   }
 }
 
+button.addEventListener('touchstart', () => {
+  play();
+}, { passive: true });
 button.addEventListener('pointerdown', (event) => {
-  if (!event.isPrimary) return;
-  event.preventDefault();
+  if (!event.isPrimary || event.pointerType === 'touch') return;
   play();
 });
 button.addEventListener('click', () => {
   play();
 });
 angryBirds.forEach((angryBird) => angryBird.addEventListener('pointerdown', explodeFlyby));
+flyingBanana.addEventListener('pointerdown', explodeFlyby);
 slingshot.addEventListener('pointerdown', explodeFlyby);
 
 voice.disableRemotePlayback = true;

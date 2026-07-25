@@ -64,6 +64,20 @@ body {
   width: min(43vw, 180px);
 }
 
+.flying-banana {
+  position: fixed;
+  z-index: 3;
+  top: 47%;
+  left: 0;
+  display: none;
+  font-size: min(25vw, 105px);
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: none;
+  filter: drop-shadow(0 10px 8px rgb(75 50 10 / 22%));
+  will-change: transform;
+}
+
 .slingshot {
   position: fixed;
   z-index: 3;
