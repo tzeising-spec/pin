@@ -38,7 +38,36 @@ let lastMouthChange = 0;
 let isFinishing = false;
 let playCount = 0;
 let currentSound = soundFiles[0];
+let soundQueue = [];
 let ignorePinUntil = 0;
+
+function shuffleSounds(sounds) {
+  const shuffled = [...sounds];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function nextSound() {
+  if (playCount === 0) {
+    soundQueue = shuffleSounds(soundFiles.slice(1));
+    return soundFiles[0];
+  }
+
+  if (soundQueue.length === 0) {
+    soundQueue = shuffleSounds(soundFiles);
+    if (soundQueue[soundQueue.length - 1] === currentSound) {
+      [soundQueue[0], soundQueue[soundQueue.length - 1]] = [
+        soundQueue[soundQueue.length - 1],
+        soundQueue[0]
+      ];
+    }
+  }
+
+  return soundQueue.pop();
+}
 
 function clearAnimation() {
   window.cancelAnimationFrame(animationTimer);
@@ -386,12 +415,7 @@ async function play() {
   document.body.classList.add('has-played');
 
   try {
-    if (playCount === 0) {
-      currentSound = soundFiles[0];
-    } else {
-      const choices = soundFiles.filter((src) => src !== currentSound);
-      currentSound = choices[Math.floor(Math.random() * choices.length)];
-    }
+    currentSound = nextSound();
     voice.src = currentSound;
     voice.load();
     voice.currentTime = 0;
