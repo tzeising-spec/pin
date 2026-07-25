@@ -12,7 +12,8 @@ const soundFiles = [
   'sounds/cantgetme.mp3',
   'sounds/sound2.mp3',
   'sounds/sound3.mp3',
-  'sounds/slingshot.mp3'
+  'sounds/slingshot.mp3',
+  'sounds/banana.mp3'
 ];
 
 allFrames.forEach((frame) => {
@@ -95,7 +96,9 @@ function flyAngryBirds() {
       angryBird.style.display = 'none';
     };
   });
+}
 
+function flyBanana() {
   flyingBanana.style.display = 'block';
   const bananaFlight = flyingBanana.animate(
     [
@@ -105,7 +108,6 @@ function flyAngryBirds() {
     ],
     {
       duration: 1800,
-      delay: 600,
       easing: 'linear',
       fill: 'backwards'
     }
@@ -171,7 +173,9 @@ function startTalking() {
   showFrame(idleFrame);
 
   const animateMouth = (now) => {
-    const hasFlyby = currentSound.endsWith('sound3.mp3') || currentSound.endsWith('slingshot.mp3');
+    const hasFlyby = currentSound.endsWith('sound3.mp3')
+      || currentSound.endsWith('slingshot.mp3')
+      || currentSound.endsWith('banana.mp3');
     const endingLead = hasFlyby ? 0.38 : 0.22;
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
@@ -259,10 +263,13 @@ function finishTalking() {
 
   if (currentSound.endsWith('sound3.mp3')) {
     flyAngryBirds();
-    finishTimers.push(window.setTimeout(resetToIdle, 2450));
+    finishTimers.push(window.setTimeout(resetToIdle, 2150));
   } else if (currentSound.endsWith('slingshot.mp3')) {
     flySlingshot();
     finishTimers.push(window.setTimeout(resetToIdle, 1000));
+  } else if (currentSound.endsWith('banana.mp3')) {
+    flyBanana();
+    finishTimers.push(window.setTimeout(resetToIdle, 1850));
   } else {
     finishTimers.push(window.setTimeout(resetToIdle, 320));
   }
