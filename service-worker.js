@@ -1,4 +1,4 @@
-const CACHE = 'pin-v52';
+const CACHE = 'pin-v53';
 const FILES = [
   './',
   'index.html',
