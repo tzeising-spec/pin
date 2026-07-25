@@ -1,5 +1,6 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
+const splitPins = document.querySelectorAll('.split-pin');
 const angryBirds = document.querySelectorAll('.angry-bird');
 const flyingBanana = document.querySelector('.flying-banana');
 const flyingHamster = document.querySelector('.flying-hamster');
@@ -21,7 +22,8 @@ const soundFiles = [
   'sounds/fluffmuffin.mp3',
   'sounds/bay.mp3',
   'sounds/tunes.mp3',
-  'sounds/swim.mp3'
+  'sounds/swim.mp3',
+  'sounds/both.mp3'
 ];
 
 allFrames.forEach((frame) => {
@@ -94,6 +96,11 @@ function clearAnimation() {
   });
   slingshot.getAnimations().forEach((animation) => animation.cancel());
   slingshot.style.display = 'none';
+  splitPins.forEach((splitPin) => {
+    splitPin.getAnimations().forEach((animation) => animation.cancel());
+    splitPin.style.display = 'none';
+  });
+  pin.style.visibility = '';
 }
 
 function showFrame(src, flipped = false) {
@@ -244,6 +251,48 @@ function flySlingshot() {
   };
 }
 
+function splitIntoTwo() {
+  const distance = Math.min(window.innerWidth * .25, 115);
+  pin.style.visibility = 'hidden';
+
+  splitPins.forEach((splitPin, index) => {
+    const direction = index === 0 ? -1 : 1;
+    splitPin.src = idleFrame;
+    splitPin.style.display = 'block';
+    const splitAnimation = splitPin.animate(
+      [
+        { transform: 'translateX(-50%) translateX(0) translateY(0) rotate(0deg)', offset: 0 },
+        {
+          transform: `translateX(-50%) translateX(${direction * distance}px) translateY(0) rotate(${direction * 3}deg)`,
+          offset: .22,
+          easing: 'cubic-bezier(.2, .8, .2, 1)'
+        },
+        {
+          transform: `translateX(-50%) translateX(${direction * distance}px) translateY(0) rotate(${direction * 3}deg)`,
+          offset: .58
+        },
+        {
+          transform: `translateX(-50%) translateX(${direction * distance * .48}px) translateY(-48px) rotate(${direction * -5}deg)`,
+          offset: .79,
+          easing: 'cubic-bezier(.3, 0, .5, 1)'
+        },
+        {
+          transform: 'translateX(-50%) translateX(0) translateY(0) rotate(0deg)',
+          offset: 1,
+          easing: 'cubic-bezier(.15, .9, .3, 1.25)'
+        }
+      ],
+      { duration: 1750, fill: 'forwards' }
+    );
+
+    if (index === splitPins.length - 1) {
+      splitAnimation.onfinish = resetToIdle;
+    }
+  });
+
+  finishTimers.push(window.setTimeout(resetToIdle, 2050));
+}
+
 function explodeFlyby(event) {
   event.preventDefault();
   event.stopPropagation();
@@ -289,7 +338,7 @@ function startTalking() {
       || currentSound.endsWith('bay.mp3')
       || currentSound.endsWith('tunes.mp3')
       || currentSound.endsWith('swim.mp3');
-    const endingLead = hasFlyby ? 0.38 : 0.22;
+    const endingLead = currentSound.endsWith('both.mp3') ? 0.72 : (hasFlyby ? 0.38 : 0.22);
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
       finishTalking();
@@ -342,6 +391,11 @@ function finishTalking() {
     );
     fallRecovery.onfinish = resetToIdle;
     finishTimers.push(window.setTimeout(resetToIdle, 3400));
+    return;
+  }
+
+  if (currentSound.endsWith('both.mp3')) {
+    splitIntoTwo();
     return;
   }
 
