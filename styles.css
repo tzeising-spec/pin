@@ -106,6 +106,20 @@ body {
   will-change: transform;
 }
 
+.flying-sandwich {
+  position: fixed;
+  z-index: 3;
+  top: 42%;
+  left: 0;
+  display: none;
+  font-size: min(28vw, 120px);
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: none;
+  filter: drop-shadow(0 10px 8px rgb(90 50 15 / 23%));
+  will-change: transform;
+}
+
 .slingshot {
   position: fixed;
   z-index: 3;
