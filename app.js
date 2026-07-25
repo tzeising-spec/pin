@@ -1,6 +1,6 @@
 const button = document.querySelector('.pin-button');
 const pin = document.querySelector('.pin');
-const angryBird = document.querySelector('.angry-bird');
+const angryBirds = document.querySelectorAll('.angry-bird');
 const slingshot = document.querySelector('.slingshot');
 const voice = document.querySelector('.voice');
 
@@ -59,8 +59,10 @@ function clearAnimation() {
   talkingDelay = null;
   finishTimers.forEach(window.clearTimeout);
   finishTimers = [];
-  angryBird.getAnimations().forEach((animation) => animation.cancel());
-  angryBird.style.display = 'none';
+  angryBirds.forEach((angryBird) => {
+    angryBird.getAnimations().forEach((animation) => animation.cancel());
+    angryBird.style.display = 'none';
+  });
   slingshot.getAnimations().forEach((animation) => animation.cancel());
   slingshot.style.display = 'none';
 }
@@ -70,22 +72,26 @@ function showFrame(src, flipped = false) {
   pin.classList.toggle('is-flipped', flipped);
 }
 
-function flyAngryBird() {
-  angryBird.style.display = 'block';
-  const flight = angryBird.animate(
-    [
-      { transform: 'translate3d(-170px, 12px, 0) rotate(-7deg)', offset: 0 },
-      { transform: 'translate3d(calc(50vw - 50%), -12px, 0) rotate(2deg)', offset: .52 },
-      { transform: 'translate3d(calc(100vw + 170px), 6px, 0) rotate(7deg)', offset: 1 }
-    ],
-    {
-      duration: 1000,
-      easing: 'linear'
-    }
-  );
-  flight.onfinish = () => {
-    angryBird.style.display = 'none';
-  };
+function flyAngryBirds() {
+  angryBirds.forEach((angryBird, index) => {
+    angryBird.style.display = 'block';
+    const flight = angryBird.animate(
+      [
+        { transform: 'translate3d(-170px, 12px, 0) rotate(-7deg)', offset: 0 },
+        { transform: 'translate3d(calc(50vw - 50%), -12px, 0) rotate(2deg)', offset: .52 },
+        { transform: 'translate3d(calc(100vw + 170px), 6px, 0) rotate(7deg)', offset: 1 }
+      ],
+      {
+        duration: 1500,
+        delay: index * 260,
+        easing: 'linear',
+        fill: 'backwards'
+      }
+    );
+    flight.onfinish = () => {
+      angryBird.style.display = 'none';
+    };
+  });
 }
 
 function flySlingshot() {
@@ -231,8 +237,8 @@ function finishTalking() {
   );
 
   if (currentSound.endsWith('sound3.mp3')) {
-    flyAngryBird();
-    finishTimers.push(window.setTimeout(resetToIdle, 1000));
+    flyAngryBirds();
+    finishTimers.push(window.setTimeout(resetToIdle, 1800));
   } else if (currentSound.endsWith('slingshot.mp3')) {
     flySlingshot();
     finishTimers.push(window.setTimeout(resetToIdle, 1000));
@@ -283,7 +289,7 @@ button.addEventListener('pointerdown', (event) => {
 button.addEventListener('click', () => {
   play();
 });
-angryBird.addEventListener('pointerdown', explodeFlyby);
+angryBirds.forEach((angryBird) => angryBird.addEventListener('pointerdown', explodeFlyby));
 slingshot.addEventListener('pointerdown', explodeFlyby);
 
 voice.disableRemotePlayback = true;

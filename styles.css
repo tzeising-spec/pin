@@ -59,6 +59,11 @@ body {
   -webkit-user-drag: none;
 }
 
+.angry-bird:nth-of-type(2) {
+  top: 35%;
+  width: min(43vw, 180px);
+}
+
 .slingshot {
   position: fixed;
   z-index: 3;
