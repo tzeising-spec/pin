@@ -224,7 +224,7 @@ function finishTalking() {
   showFrame(idleFrame);
 
   if (currentSound.endsWith('sound2.mp3')) {
-    pin.animate(
+    const fallRecovery = pin.animate(
       [
         { transform: currentTransform, offset: 0 },
         { transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)', offset: .185 },
@@ -246,7 +246,8 @@ function finishTalking() {
         easing: 'cubic-bezier(.22, 1, .36, 1)'
       }
     );
-    finishTimers.push(window.setTimeout(resetToIdle, 4300));
+    fallRecovery.onfinish = resetToIdle;
+    finishTimers.push(window.setTimeout(resetToIdle, 4700));
     return;
   }
 
