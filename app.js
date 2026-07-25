@@ -5,6 +5,7 @@ const flyingBanana = document.querySelector('.flying-banana');
 const flyingHamster = document.querySelector('.flying-hamster');
 const flyingWater = document.querySelector('.flying-water');
 const flyingSandwich = document.querySelector('.flying-sandwich');
+const flyingFish = document.querySelectorAll('.flying-fish');
 const slingshot = document.querySelector('.slingshot');
 const voice = document.querySelector('.voice');
 
@@ -19,7 +20,8 @@ const soundFiles = [
   'sounds/banana.mp3',
   'sounds/fluffmuffin.mp3',
   'sounds/bay.mp3',
-  'sounds/tunes.mp3'
+  'sounds/tunes.mp3',
+  'sounds/swim.mp3'
 ];
 
 allFrames.forEach((frame) => {
@@ -88,6 +90,10 @@ function clearAnimation() {
   flyingWater.style.display = 'none';
   flyingSandwich.getAnimations().forEach((animation) => animation.cancel());
   flyingSandwich.style.display = 'none';
+  flyingFish.forEach((fish) => {
+    fish.getAnimations().forEach((animation) => animation.cancel());
+    fish.style.display = 'none';
+  });
   slingshot.getAnimations().forEach((animation) => animation.cancel());
   slingshot.style.display = 'none';
 }
@@ -195,6 +201,33 @@ function flySandwich() {
   };
 }
 
+function flyFishSchool() {
+  flyingFish.forEach((fish, index) => {
+    const fliesLeftToRight = Math.random() < .5;
+    const startX = fliesLeftToRight ? '-130px' : 'calc(100vw + 130px)';
+    const endX = fliesLeftToRight ? 'calc(100vw + 130px)' : '-130px';
+    const facing = fliesLeftToRight ? -1 : 1;
+
+    fish.style.display = 'block';
+    const fishFlight = fish.animate(
+      [
+        { transform: `translate3d(${startX}, 8px, 0) scaleX(${facing}) rotate(-5deg)`, offset: 0 },
+        { transform: `translate3d(calc(50vw - 50%), -14px, 0) scaleX(${facing}) rotate(4deg)`, offset: .52 },
+        { transform: `translate3d(${endX}, 9px, 0) scaleX(${facing}) rotate(-3deg)`, offset: 1 }
+      ],
+      {
+        duration: 2100,
+        delay: index * 280,
+        easing: 'linear',
+        fill: 'backwards'
+      }
+    );
+    fishFlight.onfinish = () => {
+      fish.style.display = 'none';
+    };
+  });
+}
+
 function flySlingshot() {
   slingshot.style.display = 'block';
   const flight = slingshot.animate(
@@ -257,7 +290,8 @@ function startTalking() {
       || currentSound.endsWith('banana.mp3')
       || currentSound.endsWith('fluffmuffin.mp3')
       || currentSound.endsWith('bay.mp3')
-      || currentSound.endsWith('tunes.mp3');
+      || currentSound.endsWith('tunes.mp3')
+      || currentSound.endsWith('swim.mp3');
     const endingLead = hasFlyby ? 0.38 : 0.22;
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
@@ -361,6 +395,9 @@ function finishTalking() {
   } else if (currentSound.endsWith('tunes.mp3')) {
     flySandwich();
     finishTimers.push(window.setTimeout(resetToIdle, 1850));
+  } else if (currentSound.endsWith('swim.mp3')) {
+    flyFishSchool();
+    finishTimers.push(window.setTimeout(resetToIdle, 2720));
   } else {
     finishTimers.push(window.setTimeout(resetToIdle, 320));
   }
@@ -378,7 +415,15 @@ function resetToIdle() {
 async function play() {
   if (performance.now() < ignorePinUntil) return;
   if (isRoutineActive) {
-    const flybys = [...angryBirds, flyingBanana, flyingHamster, flyingWater, flyingSandwich, slingshot];
+    const flybys = [
+      ...angryBirds,
+      flyingBanana,
+      flyingHamster,
+      flyingWater,
+      flyingSandwich,
+      ...flyingFish,
+      slingshot
+    ];
     const animationRunning = [pin, ...flybys].some((element) =>
       element.getAnimations().some((animation) => animation.playState === 'running')
     );
@@ -423,6 +468,7 @@ flyingBanana.addEventListener('pointerdown', explodeFlyby);
 flyingHamster.addEventListener('pointerdown', explodeFlyby);
 flyingWater.addEventListener('pointerdown', explodeFlyby);
 flyingSandwich.addEventListener('pointerdown', explodeFlyby);
+flyingFish.forEach((fish) => fish.addEventListener('pointerdown', explodeFlyby));
 slingshot.addEventListener('pointerdown', explodeFlyby);
 
 voice.disableRemotePlayback = true;

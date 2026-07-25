@@ -120,6 +120,23 @@ body {
   will-change: transform;
 }
 
+.flying-fish {
+  position: fixed;
+  z-index: 3;
+  left: 0;
+  display: none;
+  font-size: min(24vw, 105px);
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: none;
+  filter: drop-shadow(0 10px 8px rgb(20 70 105 / 22%));
+  will-change: transform;
+}
+
+.flying-fish.fish-one { top: 27%; }
+.flying-fish.fish-two { top: 43%; font-size: min(21vw, 92px); }
+.flying-fish.fish-three { top: 57%; font-size: min(23vw, 100px); }
+
 .slingshot {
   position: fixed;
   z-index: 3;
