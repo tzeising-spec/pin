@@ -393,22 +393,7 @@ function resetToIdle() {
 
 async function play() {
   if (performance.now() < ignorePinUntil) return;
-  if (isRoutineActive) {
-    const flybys = [
-      ...angryBirds,
-      flyingBanana,
-      flyingHamster,
-      flyingWater,
-      flyingSandwich,
-      ...flyingFish,
-      slingshot
-    ];
-    const animationRunning = [pin, ...flybys].some((element) =>
-      element.getAnimations().some((animation) => animation.playState === 'running')
-    );
-    if (!voice.paused || animationRunning) return;
-    resetToIdle();
-  }
+  if (isRoutineActive) return;
   isRoutineActive = true;
 
   isFinishing = false;
