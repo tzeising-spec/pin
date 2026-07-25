@@ -92,6 +92,20 @@ body {
   will-change: transform;
 }
 
+.flying-water {
+  position: fixed;
+  z-index: 3;
+  top: 44%;
+  left: 0;
+  display: none;
+  font-size: min(29vw, 125px);
+  line-height: 1;
+  pointer-events: auto;
+  touch-action: none;
+  filter: drop-shadow(0 10px 8px rgb(15 75 120 / 24%));
+  will-change: transform;
+}
+
 .slingshot {
   position: fixed;
   z-index: 3;

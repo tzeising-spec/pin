@@ -3,6 +3,7 @@ const pin = document.querySelector('.pin');
 const angryBirds = document.querySelectorAll('.angry-bird');
 const flyingBanana = document.querySelector('.flying-banana');
 const flyingHamster = document.querySelector('.flying-hamster');
+const flyingWater = document.querySelector('.flying-water');
 const slingshot = document.querySelector('.slingshot');
 const voice = document.querySelector('.voice');
 
@@ -15,7 +16,8 @@ const soundFiles = [
   'sounds/sound3.mp3',
   'sounds/slingshot.mp3',
   'sounds/banana.mp3',
-  'sounds/fluffmuffin.mp3'
+  'sounds/fluffmuffin.mp3',
+  'sounds/bay.mp3'
 ];
 
 allFrames.forEach((frame) => {
@@ -39,6 +41,13 @@ let playCount = 0;
 let currentSound = soundFiles[0];
 let ignorePinUntil = 0;
 
+function connectAudioAnalysis() {
+  if (audioElementSource || !audioContext || audioContext.state !== 'running') return;
+  audioElementSource = audioContext.createMediaElementSource(voice);
+  audioElementSource.connect(analyser);
+  analyser.connect(audioContext.destination);
+}
+
 function prepareAudioAnalysis() {
   if (!window.AudioContext && !window.webkitAudioContext) return;
 
@@ -49,12 +58,13 @@ function prepareAudioAnalysis() {
     analyser.fftSize = 512;
     analyser.smoothingTimeConstant = 0.55;
     waveform = new Uint8Array(analyser.fftSize);
-    audioElementSource = audioContext.createMediaElementSource(voice);
-    audioElementSource.connect(analyser);
-    analyser.connect(audioContext.destination);
   }
 
-  if (audioContext.state === 'suspended') audioContext.resume();
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().then(connectAudioAnalysis).catch(() => {});
+  } else {
+    connectAudioAnalysis();
+  }
 }
 
 function clearAnimation() {
@@ -72,6 +82,8 @@ function clearAnimation() {
   flyingBanana.style.display = 'none';
   flyingHamster.getAnimations().forEach((animation) => animation.cancel());
   flyingHamster.style.display = 'none';
+  flyingWater.getAnimations().forEach((animation) => animation.cancel());
+  flyingWater.style.display = 'none';
   slingshot.getAnimations().forEach((animation) => animation.cancel());
   slingshot.style.display = 'none';
 }
@@ -141,6 +153,25 @@ function flyHamster() {
   };
 }
 
+function flyWater() {
+  flyingWater.style.display = 'block';
+  const waterFlight = flyingWater.animate(
+    [
+      { transform: 'translate3d(-150px, 8px, 0) rotate(-6deg)', offset: 0 },
+      { transform: 'translate3d(calc(50vw - 50%), -12px, 0) rotate(5deg)', offset: .52 },
+      { transform: 'translate3d(calc(100vw + 150px), 10px, 0) rotate(-4deg)', offset: 1 }
+    ],
+    {
+      duration: 1800,
+      easing: 'linear',
+      fill: 'backwards'
+    }
+  );
+  waterFlight.onfinish = () => {
+    flyingWater.style.display = 'none';
+  };
+}
+
 function flySlingshot() {
   slingshot.style.display = 'block';
   const flight = slingshot.animate(
@@ -201,7 +232,8 @@ function startTalking() {
     const hasFlyby = currentSound.endsWith('sound3.mp3')
       || currentSound.endsWith('slingshot.mp3')
       || currentSound.endsWith('banana.mp3')
-      || currentSound.endsWith('fluffmuffin.mp3');
+      || currentSound.endsWith('fluffmuffin.mp3')
+      || currentSound.endsWith('bay.mp3');
     const endingLead = hasFlyby ? 0.38 : 0.22;
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
@@ -299,6 +331,9 @@ function finishTalking() {
   } else if (currentSound.endsWith('fluffmuffin.mp3')) {
     flyHamster();
     finishTimers.push(window.setTimeout(resetToIdle, 1850));
+  } else if (currentSound.endsWith('bay.mp3')) {
+    flyWater();
+    finishTimers.push(window.setTimeout(resetToIdle, 1850));
   } else {
     finishTimers.push(window.setTimeout(resetToIdle, 320));
   }
@@ -316,7 +351,7 @@ function resetToIdle() {
 async function play() {
   if (performance.now() < ignorePinUntil) return;
   if (isRoutineActive) {
-    const flybys = [...angryBirds, flyingBanana, flyingHamster, slingshot];
+    const flybys = [...angryBirds, flyingBanana, flyingHamster, flyingWater, slingshot];
     const animationRunning = [pin, ...flybys].some((element) =>
       element.getAnimations().some((animation) => animation.playState === 'running')
     );
@@ -359,6 +394,7 @@ button.addEventListener('click', () => {
 angryBirds.forEach((angryBird) => angryBird.addEventListener('pointerdown', explodeFlyby));
 flyingBanana.addEventListener('pointerdown', explodeFlyby);
 flyingHamster.addEventListener('pointerdown', explodeFlyby);
+flyingWater.addEventListener('pointerdown', explodeFlyby);
 slingshot.addEventListener('pointerdown', explodeFlyby);
 
 voice.disableRemotePlayback = true;

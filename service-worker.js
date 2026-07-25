@@ -1,4 +1,4 @@
-const CACHE = 'pin-v47';
+const CACHE = 'pin-v48';
 const FILES = [
   './',
   'index.html',
@@ -21,7 +21,8 @@ const FILES = [
   'sounds/sound3.mp3',
   'sounds/slingshot.mp3',
   'sounds/banana.mp3',
-  'sounds/fluffmuffin.mp3'
+  'sounds/fluffmuffin.mp3',
+  'sounds/bay.mp3'
 ];
 
 self.addEventListener('install', (event) => {
