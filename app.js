@@ -106,14 +106,15 @@ function flySlingshot() {
   };
 }
 
-function explodeAngryBird(event) {
+function explodeFlyby(event) {
   event.preventDefault();
   event.stopPropagation();
-  if (angryBird.style.display !== 'block') return;
+  const flyby = event.currentTarget;
+  if (flyby.style.display !== 'block') return;
 
-  const rect = angryBird.getBoundingClientRect();
-  angryBird.getAnimations().forEach((animation) => animation.cancel());
-  angryBird.style.display = 'none';
+  const rect = flyby.getBoundingClientRect();
+  flyby.getAnimations().forEach((animation) => animation.cancel());
+  flyby.style.display = 'none';
 
   const burst = document.createElement('span');
   burst.className = 'bird-explosion';
@@ -288,7 +289,8 @@ button.addEventListener('pointerup', (event) => {
 button.addEventListener('click', () => {
   if (performance.now() - lastTouchPress > 500) play();
 });
-angryBird.addEventListener('pointerdown', explodeAngryBird);
+angryBird.addEventListener('pointerdown', explodeFlyby);
+slingshot.addEventListener('pointerdown', explodeFlyby);
 
 voice.disableRemotePlayback = true;
 voice.setAttribute('x-webkit-airplay', 'deny');
