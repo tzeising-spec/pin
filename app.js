@@ -275,19 +275,13 @@ async function play() {
   }
 }
 
-let lastTouchPress = 0;
-button.addEventListener('touchend', (event) => {
-  event.preventDefault();
-  lastTouchPress = performance.now();
-  play();
-}, { passive: false });
-button.addEventListener('pointerup', (event) => {
-  if (!event.isPrimary || event.pointerType === 'touch') return;
+button.addEventListener('pointerdown', (event) => {
+  if (!event.isPrimary) return;
   event.preventDefault();
   play();
 });
 button.addEventListener('click', () => {
-  if (performance.now() - lastTouchPress > 500) play();
+  play();
 });
 angryBird.addEventListener('pointerdown', explodeFlyby);
 slingshot.addEventListener('pointerdown', explodeFlyby);
