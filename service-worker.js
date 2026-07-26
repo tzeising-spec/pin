@@ -1,4 +1,4 @@
-const CACHE = 'pin-v57';
+const CACHE = 'pin-v62';
 const FILES = [
   './',
   'index.html',
@@ -7,6 +7,7 @@ const FILES = [
   'manifest.webmanifest',
   'images/pinbackground.png',
   'images/1.png',
+  'images/app-icon.png',
   'images/2.png',
   'images/3.png',
   'images/4.png',
@@ -22,6 +23,12 @@ const FILES = [
   'sounds/slingshot.mp3',
   'sounds/banana.mp3',
   'sounds/fluffmuffin.mp3',
+  'sounds/fluffmuffin!.mp3',
+  'sounds/hamster.mp3',
+  'sounds/faceplant.mp3',
+  'sounds/bubble_break.wav',
+  'sounds/discohall.mp3',
+  'sounds/discohallmusic.m4a',
   'sounds/bay.mp3',
   'sounds/tunes.mp3',
   'sounds/goldfish.mp3',

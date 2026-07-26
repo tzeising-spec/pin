@@ -9,6 +9,16 @@ const flyingSandwich = document.querySelector('.flying-sandwich');
 const flyingFish = document.querySelectorAll('.flying-fish');
 const slingshot = document.querySelector('.slingshot');
 const voice = document.querySelector('.voice');
+const danceVoice = new Audio('sounds/discohallmusic.m4a');
+danceVoice.preload = 'auto';
+const collectionSlots = document.querySelectorAll('.collection-slot');
+const bubbleBreak = new Audio('sounds/bubble_break.wav');
+bubbleBreak.preload = 'auto';
+const splitVoices = {
+  fluff: new Audio('sounds/fluffmuffin!.mp3'),
+  hamster: new Audio('sounds/hamster.mp3')
+};
+Object.values(splitVoices).forEach((audio) => { audio.preload = 'auto'; });
 
 const idleFrame = 'images/1.png';
 const talkingFrames = ['images/1.png', 'images/5.png'];
@@ -23,7 +33,9 @@ const soundFiles = [
   'sounds/bay.mp3',
   'sounds/tunes.mp3',
   'sounds/goldfish.mp3',
-  'sounds/both.mp3'
+  'sounds/both.mp3',
+  'sounds/faceplant.mp3',
+  'sounds/discohall.mp3'
 ];
 
 allFrames.forEach((frame) => {
@@ -38,10 +50,64 @@ let isRoutineActive = false;
 let mouthOpen = false;
 let lastMouthChange = 0;
 let isFinishing = false;
-let playCount = 0;
-let currentSound = soundFiles[0];
+let currentSound = null;
 let soundQueue = [];
 let ignorePinUntil = 0;
+let splitEffectTimers = [];
+let activeSplitVoice = null;
+let splitMouthTimer = null;
+let danceFadeTimer = null;
+let collectedThings = new Set();
+let hasWon = false;
+
+function collectThing(id) {
+  const collectibleId = id.startsWith('fish-')
+    ? [...collectionSlots].find((slot) => slot.dataset.collectible.startsWith('fish-')
+      && !slot.classList.contains('is-collected'))?.dataset.collectible
+    : id;
+  if (!collectibleId || collectedThings.has(collectibleId)) return;
+  collectedThings.add(collectibleId);
+  document.querySelector(`.collection-slot[data-collectible="${collectibleId}"]`)?.classList.add('is-collected');
+  if (collectedThings.size === collectionSlots.length) {
+    document.querySelector('.collection-strip')?.classList.add('is-complete');
+    hasWon = true;
+    celebrateWin();
+  }
+}
+
+function celebrateWin() {
+  document.body.classList.add('is-celebrating');
+  const confetti = document.createElement('span');
+  confetti.className = 'celebration-confetti';
+  for (let index = 0; index < 28; index += 1) {
+    const piece = document.createElement('i');
+    piece.style.setProperty('--angle', `${index * (360 / 28)}deg`);
+    piece.style.setProperty('--distance', `${90 + Math.random() * 120}px`);
+    piece.style.setProperty('--color', ['#e80035', '#ffbd25', '#55a63b', '#6a5acd'][index % 4]);
+    confetti.appendChild(piece);
+  }
+  document.body.appendChild(confetti);
+  window.setTimeout(() => confetti.remove(), 1500);
+
+  const victoryAnimation = pin.animate(
+    [
+      { transform: 'translateY(0) rotate(0deg)', offset: 0 },
+      { transform: 'translateY(-90px) rotate(180deg)', offset: .25 },
+      { transform: 'translateY(0) rotate(360deg)', offset: .5 },
+      { transform: 'translateY(-90px) rotate(540deg)', offset: .75 },
+      { transform: 'translateY(0) rotate(720deg)', offset: 1 }
+    ],
+    { duration: 2200, easing: 'ease-out' }
+  );
+  victoryAnimation.onfinish = () => document.body.classList.remove('is-celebrating');
+}
+
+function resetCollection() {
+  collectedThings.clear();
+  document.querySelectorAll('.collection-slot.is-collected').forEach((slot) => slot.classList.remove('is-collected'));
+  document.querySelector('.collection-strip')?.classList.remove('is-complete');
+  hasWon = false;
+}
 
 function shuffleSounds(sounds) {
   const shuffled = [...sounds];
@@ -53,14 +119,9 @@ function shuffleSounds(sounds) {
 }
 
 function nextSound() {
-  if (playCount === 0) {
-    soundQueue = shuffleSounds(soundFiles.slice(1));
-    return soundFiles[0];
-  }
-
   if (soundQueue.length === 0) {
     soundQueue = shuffleSounds(soundFiles);
-    if (soundQueue[soundQueue.length - 1] === currentSound) {
+    if (currentSound && soundQueue.length > 1 && soundQueue[soundQueue.length - 1] === currentSound) {
       [soundQueue[0], soundQueue[soundQueue.length - 1]] = [
         soundQueue[soundQueue.length - 1],
         soundQueue[0]
@@ -100,6 +161,23 @@ function clearAnimation() {
     splitPin.getAnimations().forEach((animation) => animation.cancel());
     splitPin.style.display = 'none';
   });
+  Object.values(splitVoices).forEach((audio) => {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.onended = null;
+  });
+  activeSplitVoice = null;
+  splitEffectTimers.forEach(window.clearTimeout);
+  splitEffectTimers = [];
+  window.clearTimeout(danceFadeTimer);
+  danceFadeTimer = null;
+  danceVoice.pause();
+  danceVoice.currentTime = 0;
+  danceVoice.volume = 1;
+  danceVoice.ontimeupdate = null;
+  document.body.classList.remove('is-dancing');
+  window.cancelAnimationFrame(splitMouthTimer);
+  splitMouthTimer = null;
   pin.style.visibility = '';
 }
 
@@ -212,7 +290,6 @@ function flyFishSchool() {
     const startX = fliesLeftToRight ? '-130px' : 'calc(100vw + 130px)';
     const endX = fliesLeftToRight ? 'calc(100vw + 130px)' : '-130px';
     const facing = fliesLeftToRight ? -1 : 1;
-
     fish.style.display = 'block';
     const fishFlight = fish.animate(
       [
@@ -242,7 +319,7 @@ function flySlingshot() {
       { transform: 'translate3d(-190px, 7px, 0) rotate(-8deg)', offset: 1 }
     ],
     {
-      duration: 1000,
+      duration: 1600,
       easing: 'linear'
     }
   );
@@ -259,21 +336,83 @@ function splitIntoTwo() {
     const direction = index === 0 ? -1 : 1;
     splitPin.src = idleFrame;
     splitPin.style.display = 'block';
-    const splitAnimation = splitPin.animate(
+    splitPin.animate(
       [
         { transform: 'translateX(-50%) translateX(0) translateY(0) rotate(0deg)', offset: 0 },
         {
           transform: `translateX(-50%) translateX(${direction * distance}px) translateY(0) rotate(${direction * 3}deg)`,
-          offset: .22,
+          offset: 1,
           easing: 'cubic-bezier(.2, .8, .2, 1)'
-        },
+        }
+      ],
+      { duration: 450, fill: 'forwards' }
+    );
+  });
+
+  voice.pause();
+  playSplitEffect(0, distance);
+  splitEffectTimers.push(window.setTimeout(() => mergeSplitPins(distance), 7000));
+}
+
+function playSplitEffect(index, distance) {
+  const effects = [
+    { pin: 0, file: 'sounds/fluffmuffin!.mp3' },
+    { pin: 1, file: 'sounds/hamster.mp3' },
+    { pin: 0, file: 'sounds/fluffmuffin!.mp3' },
+    { pin: 1, file: 'sounds/hamster.mp3' }
+  ];
+
+  if (index >= effects.length) {
+    mergeSplitPins(distance);
+    return;
+  }
+
+  splitPins.forEach((splitPin, pinIndex) => {
+    splitPin.src = pinIndex === effects[index].pin ? talkingFrames[1] : idleFrame;
+  });
+  activeSplitVoice = effects[index].pin === 0 ? splitVoices.fluff : splitVoices.hamster;
+  activeSplitVoice.currentTime = 0;
+  window.cancelAnimationFrame(splitMouthTimer);
+  const animateSplitMouth = () => {
+    if (activeSplitVoice !== (effects[index].pin === 0 ? splitVoices.fluff : splitVoices.hamster)
+      || activeSplitVoice.paused) return;
+    const mouthFrame = Math.floor(activeSplitVoice.currentTime / 0.14) % 2 === 1
+      ? talkingFrames[1]
+      : talkingFrames[0];
+    splitPins[effects[index].pin].src = mouthFrame;
+    splitMouthTimer = window.requestAnimationFrame(animateSplitMouth);
+  };
+  splitMouthTimer = window.requestAnimationFrame(animateSplitMouth);
+  activeSplitVoice.onended = () => playSplitEffect(index + 1, distance);
+  activeSplitVoice.play().catch(() => playSplitEffect(index + 1, distance));
+  if (Number.isFinite(activeSplitVoice.duration)) {
+    splitEffectTimers.push(window.setTimeout(() => {
+      if (activeSplitVoice === (effects[index].pin === 0 ? splitVoices.fluff : splitVoices.hamster)) {
+        activeSplitVoice.pause();
+        activeSplitVoice.onended = null;
+        playSplitEffect(index + 1, distance);
+      }
+    }, Math.max(0, (activeSplitVoice.duration - 0.1) * 1000)));
+  }
+}
+
+function mergeSplitPins(distance) {
+  if (activeSplitVoice) {
+    activeSplitVoice.pause();
+    activeSplitVoice.onended = null;
+  }
+  splitPins.forEach((splitPin, index) => {
+    const direction = index === 0 ? -1 : 1;
+    splitPin.src = idleFrame;
+    const mergeAnimation = splitPin.animate(
+      [
         {
           transform: `translateX(-50%) translateX(${direction * distance}px) translateY(0) rotate(${direction * 3}deg)`,
-          offset: .58
+          offset: 0
         },
         {
           transform: `translateX(-50%) translateX(${direction * distance * .48}px) translateY(-48px) rotate(${direction * -5}deg)`,
-          offset: .79,
+          offset: .42,
           easing: 'cubic-bezier(.3, 0, .5, 1)'
         },
         {
@@ -282,15 +421,11 @@ function splitIntoTwo() {
           easing: 'cubic-bezier(.15, .9, .3, 1.25)'
         }
       ],
-      { duration: 1750, fill: 'forwards' }
+      { duration: 650, fill: 'forwards' }
     );
 
-    if (index === splitPins.length - 1) {
-      splitAnimation.onfinish = resetToIdle;
-    }
+    if (index === splitPins.length - 1) mergeAnimation.onfinish = resetToIdle;
   });
-
-  finishTimers.push(window.setTimeout(resetToIdle, 2050));
 }
 
 function explodeFlyby(event) {
@@ -299,6 +434,9 @@ function explodeFlyby(event) {
   const flyby = event.currentTarget;
   if (flyby.style.display !== 'block') return;
   ignorePinUntil = performance.now() + 750;
+  collectThing(flyby.dataset.collectible);
+  bubbleBreak.currentTime = 0;
+  bubbleBreak.play().catch(() => {});
 
   const rect = flyby.getBoundingClientRect();
   flyby.getAnimations().forEach((animation) => animation.cancel());
@@ -338,7 +476,7 @@ function startTalking() {
       || currentSound.endsWith('bay.mp3')
       || currentSound.endsWith('tunes.mp3')
       || currentSound.endsWith('goldfish.mp3');
-    const endingLead = currentSound.endsWith('both.mp3') ? 0.72 : (hasFlyby ? 0.38 : 0.22);
+    const endingLead = currentSound.endsWith('both.mp3') ? 0 : (hasFlyby ? 0.38 : 0.22);
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
       finishTalking();
@@ -366,6 +504,52 @@ function finishTalking() {
   clearAnimation();
   document.body.classList.remove('is-talking');
   showFrame(idleFrame);
+
+  if (currentSound.endsWith('discohall.mp3')) {
+    startDiscoDance();
+    return;
+  }
+
+  if (currentSound.endsWith('faceplant.mp3')) {
+    const faceplantRecovery = pin.animate(
+      [
+        { transform: currentTransform, offset: 0 },
+        { transform: 'translateY(-8px) rotate(4deg)', offset: .1 },
+        {
+          transform: 'translateX(-18px) translateY(20px) rotate(-18deg)',
+          offset: .2,
+          easing: 'cubic-bezier(.65, 0, 1, .4)'
+        },
+        {
+          transform: 'translateX(-80px) translateY(68px) rotate(-58deg) scale(.87)',
+          offset: .3,
+          easing: 'cubic-bezier(.7, 0, 1, .45)'
+        },
+        {
+          transform: 'translateX(-105px) translateY(94px) rotate(-68deg) scale(.84)',
+          offset: .36,
+          easing: 'cubic-bezier(.12, .85, .2, 1)'
+        },
+        { transform: 'translateX(-105px) translateY(94px) rotate(-68deg) scale(.84)', offset: .84 },
+        {
+          transform: 'translateX(-52px) translateY(45px) rotate(-35deg) scale(.92)',
+          offset: .9,
+          easing: 'cubic-bezier(.22, 1, .36, 1)'
+        },
+        { transform: 'translateY(0) rotate(0deg) scale(1)', offset: .98 },
+        { transform: 'translateY(0) rotate(0deg) scale(1)', offset: 1 }
+      ],
+      {
+        duration: 1800,
+        easing: 'linear'
+      }
+    );
+    faceplantRecovery.onfinish = resetToIdle;
+    finishTimers.push(window.setTimeout(() => showFrame('images/3.png'), 520));
+    finishTimers.push(window.setTimeout(() => showFrame(idleFrame), 1580));
+    finishTimers.push(window.setTimeout(resetToIdle, 2050));
+    return;
+  }
 
   if (currentSound.endsWith('sound2.mp3')) {
     const fallRecovery = pin.animate(
@@ -420,7 +604,7 @@ function finishTalking() {
     finishTimers.push(window.setTimeout(resetToIdle, 2150));
   } else if (currentSound.endsWith('slingshot.mp3')) {
     flySlingshot();
-    finishTimers.push(window.setTimeout(resetToIdle, 1000));
+    finishTimers.push(window.setTimeout(resetToIdle, 1650));
   } else if (currentSound.endsWith('banana.mp3')) {
     flyBanana();
     finishTimers.push(window.setTimeout(resetToIdle, 1850));
@@ -441,6 +625,21 @@ function finishTalking() {
   }
 }
 
+function startDiscoDance() {
+  document.body.classList.add('is-dancing');
+  danceVoice.currentTime = 0;
+  danceVoice.volume = 1;
+  danceVoice.ontimeupdate = () => {
+    const fadeDuration = 1.7;
+    const remaining = danceVoice.duration - danceVoice.currentTime;
+    if (Number.isFinite(remaining) && remaining <= fadeDuration) {
+      danceVoice.volume = Math.max(0, remaining / fadeDuration);
+    }
+  };
+  danceVoice.play().catch(() => resetToIdle());
+  danceVoice.onended = resetToIdle;
+}
+
 function resetToIdle() {
   clearAnimation();
   isFinishing = false;
@@ -453,6 +652,7 @@ function resetToIdle() {
 async function play() {
   if (performance.now() < ignorePinUntil) return;
   if (isRoutineActive) return;
+  if (hasWon) resetCollection();
   isRoutineActive = true;
 
   isFinishing = false;
@@ -464,7 +664,6 @@ async function play() {
     voice.load();
     voice.currentTime = 0;
     await voice.play();
-    playCount += 1;
   } catch {
     resetToIdle();
   }

@@ -9,21 +9,33 @@
     <meta name="apple-mobile-web-app-title" content="Pin" />
     <title>Pin</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="images/1.png" />
+    <link rel="apple-touch-icon" href="images/app-icon.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="collection-strip" aria-label="Things to collect">
+      <span class="collection-slot" data-collectible="bird-1"><img src="images/angrybird.png" alt="" /></span>
+      <span class="collection-slot" data-collectible="bird-2"><img src="images/angrybird.png" alt="" /></span>
+      <span class="collection-slot" data-collectible="banana">🍌</span>
+      <span class="collection-slot" data-collectible="hamster">🐹</span>
+      <span class="collection-slot" data-collectible="water">🌊</span>
+      <span class="collection-slot" data-collectible="sandwich">🥪</span>
+      <span class="collection-slot fish-key" data-collectible="fish-1">🐠</span>
+      <span class="collection-slot fish-key" data-collectible="fish-2">🐠</span>
+      <span class="collection-slot fish-key" data-collectible="fish-3">🐠</span>
+      <span class="collection-slot" data-collectible="slingshot"><img class="key-slingshot" src="images/slingshot.png" alt="" /></span>
+    </div>
     <main class="stage">
-      <img class="angry-bird" src="images/angrybird.png" alt="" aria-hidden="true" draggable="false" />
-      <img class="angry-bird" src="images/angrybird.png" alt="" aria-hidden="true" draggable="false" />
-      <span class="flying-banana" aria-hidden="true">🍌</span>
-      <span class="flying-hamster" aria-hidden="true">🐹</span>
-      <span class="flying-water" aria-hidden="true">🌊</span>
-      <span class="flying-sandwich" aria-hidden="true">🥪</span>
-      <span class="flying-fish fish-one" style="display: none" aria-hidden="true">🐠</span>
-      <span class="flying-fish fish-two" style="display: none" aria-hidden="true">🐠</span>
-      <span class="flying-fish fish-three" style="display: none" aria-hidden="true">🐠</span>
-      <img class="slingshot" src="images/slingshot.png" alt="" aria-hidden="true" draggable="false" />
+      <img class="angry-bird" data-collectible="bird-1" src="images/angrybird.png" alt="" aria-hidden="true" draggable="false" />
+      <img class="angry-bird" data-collectible="bird-2" src="images/angrybird.png" alt="" aria-hidden="true" draggable="false" />
+      <span class="flying-banana" data-collectible="banana" aria-hidden="true">🍌</span>
+      <span class="flying-hamster" data-collectible="hamster" aria-hidden="true">🐹</span>
+      <span class="flying-water" data-collectible="water" aria-hidden="true">🌊</span>
+      <span class="flying-sandwich" data-collectible="sandwich" aria-hidden="true">🥪</span>
+      <span class="flying-fish fish-one" data-collectible="fish-1" style="display: none" aria-hidden="true">🐠</span>
+      <span class="flying-fish fish-two" data-collectible="fish-2" style="display: none" aria-hidden="true">🐠</span>
+      <span class="flying-fish fish-three" data-collectible="fish-3" style="display: none" aria-hidden="true">🐠</span>
+      <img class="slingshot" data-collectible="slingshot" src="images/slingshot.png" alt="" aria-hidden="true" draggable="false" />
       <button class="pin-button" type="button" aria-label="Tap Pin to make him talk">
         <span class="pin-wrap">
           <span class="taunt-lines" aria-hidden="true">
