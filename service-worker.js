@@ -1,4 +1,4 @@
-const CACHE = 'pin-v56';
+const CACHE = 'pin-v57';
 const FILES = [
   './',
   'index.html',
@@ -15,7 +15,7 @@ const FILES = [
   'images/7.png',
   'images/8.png',
   'images/angrybird.png',
-  'images/slingshot.jpg',
+  'images/slingshot.png',
   'sounds/cantgetme.mp3',
   'sounds/sound2.mp3',
   'sounds/sound3.mp3',
