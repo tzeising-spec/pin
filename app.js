@@ -435,8 +435,9 @@ function explodeFlyby(event) {
   if (flyby.style.display !== 'block') return;
   ignorePinUntil = performance.now() + 750;
   collectThing(flyby.dataset.collectible);
-  bubbleBreak.currentTime = 0;
-  bubbleBreak.play().catch(() => {});
+  const popSound = bubbleBreak.cloneNode(true);
+  popSound.currentTime = 0;
+  popSound.play().catch(() => {});
 
   const rect = flyby.getBoundingClientRect();
   flyby.getAnimations().forEach((animation) => animation.cancel());
