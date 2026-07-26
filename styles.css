@@ -28,9 +28,11 @@ body {
   top: max(8px, env(safe-area-inset-top));
   left: 50%;
   display: flex;
-  gap: 7px;
+  gap: clamp(2px, 1vw, 7px);
   align-items: center;
-  padding: 8px 8px;
+  width: max-content;
+  max-width: calc(100vw - 8px);
+  padding: clamp(5px, 2vw, 8px);
   border: 2px solid rgb(107 59 19 / 16%);
   border-radius: 999px;
   background: rgb(255 255 255 / 78%);
@@ -42,10 +44,10 @@ body {
 
 .collection-slot {
   display: grid;
-  width: 37px;
-  height: 37px;
+  width: clamp(27px, 8.5vw, 37px);
+  height: clamp(27px, 8.5vw, 37px);
   place-items: center;
-  font-size: 34px;
+  font-size: clamp(22px, 7.7vw, 34px);
   line-height: 1;
   filter: grayscale(1);
   opacity: .3;
@@ -53,14 +55,14 @@ body {
 }
 
 .collection-slot img {
-  width: 48px;
-  height: 48px;
+  width: clamp(30px, 12vw, 48px);
+  height: clamp(30px, 12vw, 48px);
   object-fit: contain;
 }
 
 .collection-slot .key-slingshot {
-  width: 35px;
-  height: 43px;
+  width: clamp(23px, 8.5vw, 35px);
+  height: clamp(29px, 11vw, 43px);
 }
 
 .collection-slot[data-collectible^="bird"] img {
