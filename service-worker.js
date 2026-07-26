@@ -24,7 +24,7 @@ const FILES = [
   'sounds/fluffmuffin.mp3',
   'sounds/bay.mp3',
   'sounds/tunes.mp3',
-  'sounds/swim.mp3',
+  'sounds/goldfish.mp3',
   'sounds/both.mp3'
 ];
 

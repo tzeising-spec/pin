@@ -22,7 +22,7 @@ const soundFiles = [
   'sounds/fluffmuffin.mp3',
   'sounds/bay.mp3',
   'sounds/tunes.mp3',
-  'sounds/swim.mp3',
+  'sounds/goldfish.mp3',
   'sounds/both.mp3'
 ];
 
@@ -221,8 +221,8 @@ function flyFishSchool() {
         { transform: `translate3d(${endX}, 9px, 0) scaleX(${facing}) rotate(-3deg)`, offset: 1 }
       ],
       {
-        duration: 2100,
-        delay: index * 280,
+        duration: 2600,
+        delay: index * 340,
         easing: 'linear',
         fill: 'backwards'
       }
@@ -337,7 +337,7 @@ function startTalking() {
       || currentSound.endsWith('fluffmuffin.mp3')
       || currentSound.endsWith('bay.mp3')
       || currentSound.endsWith('tunes.mp3')
-      || currentSound.endsWith('swim.mp3');
+      || currentSound.endsWith('goldfish.mp3');
     const endingLead = currentSound.endsWith('both.mp3') ? 0.72 : (hasFlyby ? 0.38 : 0.22);
     const playbackTime = voice.currentTime;
     if (voice.duration && playbackTime >= voice.duration - endingLead) {
@@ -433,9 +433,9 @@ function finishTalking() {
   } else if (currentSound.endsWith('tunes.mp3')) {
     flySandwich();
     finishTimers.push(window.setTimeout(resetToIdle, 1850));
-  } else if (currentSound.endsWith('swim.mp3')) {
+  } else if (currentSound.endsWith('goldfish.mp3')) {
     flyFishSchool();
-    finishTimers.push(window.setTimeout(resetToIdle, 2720));
+    finishTimers.push(window.setTimeout(resetToIdle, 3400));
   } else {
     finishTimers.push(window.setTimeout(resetToIdle, 320));
   }

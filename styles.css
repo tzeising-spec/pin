@@ -278,34 +278,12 @@ body {
   -webkit-user-drag: none;
 }
 
-.pin-button:active .pin { transform: scale(.97); }
 .pin.is-flipped { transform: scaleX(-1); }
 .pin-button:focus-visible { outline: 4px solid #d98922; outline-offset: 5px; border-radius: 28px; }
 
 .is-talking .pin {
   animation: pin-rock 500ms ease-in-out infinite;
 }
-
-.tap-hint {
-  position: absolute;
-  top: 12%;
-  right: max(2%, calc(50% - 205px));
-  padding: 10px 16px;
-  color: #6b3b13;
-  background: rgb(255 255 255 / 82%);
-  border: 2px solid rgb(107 59 19 / 18%);
-  border-radius: 999px;
-  font-size: clamp(17px, 5vw, 22px);
-  font-weight: 800;
-  box-shadow: 0 6px 20px rgb(91 52 14 / 10%);
-  animation: bob 1.8s ease-in-out infinite;
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.is-playing .tap-hint,
-.has-played .tap-hint { opacity: 0; transform: scale(.8); }
-
-@keyframes bob { 50% { transform: translateY(-7px) rotate(2deg); } }
 
 @keyframes float-shape {
   25% { transform: translate(28px, -32px) scale(1.16); }
@@ -342,7 +320,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tap-hint { animation: none; }
   .stage::before, .stage::after, .taunt-lines { animation: none; }
   .bird-explosion i { animation-duration: 180ms; }
   .bird-explosion::before { animation-duration: 180ms; }
