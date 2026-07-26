@@ -370,7 +370,11 @@ function finishTalking() {
   if (currentSound.endsWith('sound2.mp3')) {
     const fallRecovery = pin.animate(
       [
-        { transform: currentTransform, offset: 0 },
+        {
+          transform: currentTransform,
+          offset: 0,
+          easing: 'cubic-bezier(.4, 0, .8, .7)'
+        },
         { transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)', offset: .185 },
         { transform: 'translateX(-175px) translateY(-5px) rotate(84deg) scale(.72)', offset: .265 },
         { transform: 'translateX(-175px) translateY(2px) rotate(92deg) scale(.72)', offset: .345 },
@@ -379,18 +383,19 @@ function finishTalking() {
         { transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)', offset: .557 },
         {
           transform: 'translateX(-175px) translateY(0) rotate(88deg) scale(.72)',
-          offset: .82,
-          easing: 'cubic-bezier(.4, 0, .8, .7)'
+          offset: .72,
+          easing: 'cubic-bezier(.18, .8, .3, 1)'
         },
+        { transform: 'translateY(0) rotate(0deg) scale(1)', offset: .96 },
         { transform: 'translateY(0) rotate(0deg) scale(1)', offset: 1 }
       ],
       {
-        duration: 3000,
-        easing: 'cubic-bezier(.22, 1, .36, 1)'
+        duration: 2400,
+        easing: 'linear'
       }
     );
     fallRecovery.onfinish = resetToIdle;
-    finishTimers.push(window.setTimeout(resetToIdle, 3400));
+    finishTimers.push(window.setTimeout(resetToIdle, 2600));
     return;
   }
 
