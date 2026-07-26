@@ -83,6 +83,12 @@ body {
   background: rgb(230 250 215 / 92%);
 }
 
+@media (max-width: 600px) {
+  .collection-slot[data-collectible^="bird"] img {
+    transform: translateY(-24px);
+  }
+}
+
 .stage {
   min-height: 100%;
   min-height: 100dvh;

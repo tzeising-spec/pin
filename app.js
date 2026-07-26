@@ -14,11 +14,13 @@ danceVoice.preload = 'auto';
 const collectionSlots = document.querySelectorAll('.collection-slot');
 const bubbleBreak = new Audio('sounds/bubble_break.wav');
 bubbleBreak.preload = 'auto';
-const splitVoices = {
-  fluff: new Audio('sounds/fluffmuffin!.mp3'),
-  hamster: new Audio('sounds/hamster.mp3')
-};
-Object.values(splitVoices).forEach((audio) => { audio.preload = 'auto'; });
+const splitVoices = [
+  new Audio('sounds/fluffmuffin!.mp3'),
+  new Audio('sounds/hamster.mp3'),
+  new Audio('sounds/fluffmuffin!.mp3'),
+  new Audio('sounds/hamster.mp3')
+];
+splitVoices.forEach((audio) => { audio.preload = 'auto'; });
 
 const idleFrame = 'images/1.png';
 const talkingFrames = ['images/1.png', 'images/5.png'];
@@ -161,7 +163,7 @@ function clearAnimation() {
     splitPin.getAnimations().forEach((animation) => animation.cancel());
     splitPin.style.display = 'none';
   });
-  Object.values(splitVoices).forEach((audio) => {
+  splitVoices.forEach((audio) => {
     audio.pause();
     audio.currentTime = 0;
     audio.onended = null;
@@ -356,10 +358,10 @@ function splitIntoTwo() {
 
 function playSplitEffect(index, distance) {
   const effects = [
-    { pin: 0, file: 'sounds/fluffmuffin!.mp3' },
-    { pin: 1, file: 'sounds/hamster.mp3' },
-    { pin: 0, file: 'sounds/fluffmuffin!.mp3' },
-    { pin: 1, file: 'sounds/hamster.mp3' }
+    { pin: 0 },
+    { pin: 1 },
+    { pin: 0 },
+    { pin: 1 }
   ];
 
   if (index >= effects.length) {
@@ -370,11 +372,11 @@ function playSplitEffect(index, distance) {
   splitPins.forEach((splitPin, pinIndex) => {
     splitPin.src = pinIndex === effects[index].pin ? talkingFrames[1] : idleFrame;
   });
-  activeSplitVoice = effects[index].pin === 0 ? splitVoices.fluff : splitVoices.hamster;
+  activeSplitVoice = splitVoices[index];
   activeSplitVoice.currentTime = 0;
   window.cancelAnimationFrame(splitMouthTimer);
   const animateSplitMouth = () => {
-    if (activeSplitVoice !== (effects[index].pin === 0 ? splitVoices.fluff : splitVoices.hamster)
+    if (activeSplitVoice !== splitVoices[index]
       || activeSplitVoice.paused) return;
     const mouthFrame = Math.floor(activeSplitVoice.currentTime / 0.14) % 2 === 1
       ? talkingFrames[1]
@@ -385,15 +387,6 @@ function playSplitEffect(index, distance) {
   splitMouthTimer = window.requestAnimationFrame(animateSplitMouth);
   activeSplitVoice.onended = () => playSplitEffect(index + 1, distance);
   activeSplitVoice.play().catch(() => playSplitEffect(index + 1, distance));
-  if (Number.isFinite(activeSplitVoice.duration)) {
-    splitEffectTimers.push(window.setTimeout(() => {
-      if (activeSplitVoice === (effects[index].pin === 0 ? splitVoices.fluff : splitVoices.hamster)) {
-        activeSplitVoice.pause();
-        activeSplitVoice.onended = null;
-        playSplitEffect(index + 1, distance);
-      }
-    }, Math.max(0, (activeSplitVoice.duration - 0.1) * 1000)));
-  }
 }
 
 function mergeSplitPins(distance) {
